@@ -16,21 +16,29 @@ contract StoreHash {
         string extension;
     }
 
+    struct Profile{
+        bytes32 name;
+        bytes32 bio_1;
+        bytes32 bio_2;
+        bytes32 bio_3;
+    }
+
     newsUpdate[] public newsList;
     mapping(address => uint) public userReputation;
     mapping(string => int) public postReputation;
     mapping(string => mapping(address => bool)) public postToAccess;
 
-    mapping(address => bytes32) public userProfile;
-    mapping(address => bytes32) public userBio;  // maps user address to a profile (username)
+    mapping(address => Profile) public userProfile;
 
     event storageUpdate(string newValue, address updatedBy);
 
     function sendUpdate(string memory ipfsHash,string memory location, string memory time, string memory imageHash,string memory category, string memory extension) public {
         newsList.push(newsUpdate({
             user:msg.sender,
-            username: this.bytes32ToString(userProfile[msg.sender]),
-            bio: this.bytes32ToString(userBio[msg.sender]),
+            username: this.bytes32ToString(userProfile[msg.sender].name),
+            bio_1: userProfile[msg.sender].bio_1,
+            bio_2: userProfile[msg.sender].bio_1,
+            bio_3: userProfile[msg.sender].bio_1,
             timeStamp:time,
             location:location,
             fileHash: ipfsHash,
@@ -89,24 +97,34 @@ contract StoreHash {
         return false;    }
 
     function getUsername(address account) public view returns (bytes32){
-        return userProfile[account];
+        return userProfile[account].name;
     }
 
     function setUsername(address account, bytes32 newName) public{
-        userProfile[account] = newName;
+        userProfile[account].name = newName;
     }
 
-    function getBio(address account) public view returns (bytes32){
-        return userBio[account];
+    function getBio(address account) public view returns (string memory){
+        return string(abi.encodePakced(
+          bytes32ToString(userProfile[account].bio_1),
+          bytes32ToString(userProfile[account].bio_2),
+          bytes32ToString(userProfile[account].bio_3)
+          ));
     }
 
-    function setBio(address account, bytes32 newBio) public{
-        userBio[account] = newBio;
+    function setBio(address account,
+      bytes32 newBio_1, bytes32 newBio_2, bytes32 newBio_3) public{
+        userProfile[account].bio_1 = newBio_1;
+        userProfile[account].bio_2 = newBio_2;
+        userProfile[account].bio_3 = newBio_3;
     }
 
-    function setProfile(address account, bytes32 newBio, bytes32 newName) public{
-        userBio[account] = newBio;
-        userProfile[account] = newName;
+    function setProfile(address account, bytes32 newName,
+      bytes32 newBio_1, bytes32 newBio_2, bytes32 newBio_3) public{
+        userProfile[account].name = newName;
+        userProfile[account].bio_1 = newBio_1;
+        userProfile[account].bio_2 = newBio_2;
+        userProfile[account].bio_3 = newBio_3;
     }
 
     function bytes32ToString(bytes32 _bytes32) public pure returns (string memory) {

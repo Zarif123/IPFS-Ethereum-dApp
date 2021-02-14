@@ -391,7 +391,7 @@ class App extends Component {
         return result;
       });
      console.log("before update bio: "+this.state.bio);
-     this.setState({bio: web3.utils.hexToAscii(bio)});
+     this.setState({bio: bio});
      console.log("after update bio: "+bio);
   }
 
@@ -401,13 +401,12 @@ class App extends Component {
       console.log('fetched bio: '+result);
       return result;
     });
-    if (bio == 0x0000000000000000000000000000000000000000000000000000000000000000){
+    if (bio.length == 0){
       console.log("no bio");
       // default userName is first 10 char of userAddress
       bio = "I am a Northwestern Student";
-    } else{
-      bio = web3.utils.hexToAscii(bio);
     }
+
     this.setState({bio: bio});
     return bio;
   }
@@ -417,19 +416,38 @@ class App extends Component {
     const name = this.state.nameField;
     console.log('call editProfile function');
     const bio = this.state.bioField;
+    var bio_1 = "", bio_2 = "", bio_3 = "";
+    if (bio.length >= 32){
+      bio_1 = bio.substring(0,32);
+      if (bio.length >= 64){
+        bio_2 = bio.substring(32,64);
+        if (bio.length > 64){
+          bio_3 = bio.substring(64);
+        }
+      } else {
+        bio_2 = bio.substring(32);
+      }
+    } else {
+      bio_1 = bio;
+    }
 
     console.log("state: "+name+" field: "+this.state.username);
     console.log("state: "+bio+" field: "+this.state.bio);
-    // change username/bio on chain only if textField is nonempty and not the same as username
-    if (!(!name || 0 === name.length) && !(!bio || 0 === bio.length)){
+
+    if (!(!name || 0 === name.length) && !(!bio || 0 === bio.length)){ // change bio + name
       console.log('Profile being processed; name: '+name+' bio: '+bio);
-      storehash.methods.setProfile(address, web3.utils.asciiToHex(bio), web3.utils.asciiToHex(name)).send({from: this.state.walletAddress});
-    } else if (!(!bio || 0 === bio.length)) {
+      storehash.methods.setProfile(address, web3.utils.asciiToHex(name),
+        web3.utils.asciiToHex(bio_1),web3.utils.asciiToHex(bio_2),web3.utils.asciiToHex(bio_3))
+        .send({from: this.state.walletAddress});
+    } else if (!(!bio || 0 === bio.length)) { // change only bio
       console.log('bio being processed: '+bio);
-      storehash.methods.setBio(address, web3.utils.asciiToHex(bio)).send({from: this.state.walletAddress});
-    } else if (!(!name || 0 === name.length)) {
+      storehash.methods.setBio(address, web3.utils.asciiToHex(bio_1),
+        web3.utils.asciiToHex(bio_2),web3.utils.asciiToHex(bio_3))
+        .send({from: this.state.walletAddress});
+    } else if (!(!name || 0 === name.length)) { // change only name
       console.log('name being processed: '+name);
-      storehash.methods.setUsername(address, web3.utils.asciiToHex(name)).send({from: this.state.walletAddress});
+      storehash.methods.setUsername(address, web3.utils.asciiToHex(name))
+        .send({from: this.state.walletAddress});
     }
     this.updateUsername();
     this.updateBio();
@@ -491,9 +509,9 @@ render() {
       const { search } = window.location;
       const query = new URLSearchParams(search).get('s').toLowerCase();
       // for search button searching
-      // const filtered_posts = this.state.newsList
-      //   .filter(e => e.username.toLowerCase().includes(query));
-      // for live search searching
+        // const filtered_posts = this.state.newsList
+        //   .filter(e => e.username.toLowerCase().includes(query));
+      // for live search searching (change username to filter other states)
       const filtered_posts = this.state.newsList
         .filter(e => e.username.toLowerCase().includes(this.state.searchField));
 
